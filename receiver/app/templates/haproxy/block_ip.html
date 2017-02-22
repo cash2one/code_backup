@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container">
+
+    <ol class="breadcrumb">
+        <li><a href="#">Block IP</a></li>
+        <li class="active">{{ node_name }}</li>
+    </ol>
+    <div class="row-fluid">
+        <form class="form-horizontal" action="/haproxy/delete_block_ip" method="post" id="form_delete_block_ip"
+              onsubmit="return submit_delete_block_ip()">
+            <div class="span12">
+
+                <table class="table table-hover table-striped">
+                    <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>IP</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for block_ip in block_ip_list %}
+                    <tr>
+                        <td><input type="checkbox" value="{{ block_ip.ip }}" name="checkbox_select_ip"></td>
+                        <td>{{ block_ip.ip }}</td>
+                        <td>{{ block_ip.start_time }}</td>
+                        <td>{{ block_ip.end_time }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <input type="hidden" name="node_id" value="{{ node_id }}">
+        </form>
+    </div>
+
+    <!-- Process Modal -->
+    <div class="modal fade bs-example-modal-lg" id="add_block_ip_Modal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document" style="width: 50%;">
+            <form class="form-horizontal" action="/haproxy/add_block_ip" method="post" id="form_add_machine"
+                  onsubmit="return submit_block_ip()">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="process_modal_title">Add Block IP</h4>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="input_block_ip" class="col-sm-2 control-label">Block Ip</label>
+
+                            <div class="col-sm-7" style="padding:0px;">
+                                <input type="text" class="form-control" id="input_block_ip" name="block_ip"
+                                       placeholder="10.101.1.111">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dtp_input1" class="col-md-2 control-label">End Time</label>
+
+                            <div class="input-group date form_datetime col-md-7" data-date="2015-12-22 00:00:00"
+                                 data-date-format="yyyy-mm-dd hh:ii:ss" data-link-field="dtp_input1">
+                                <input class="form-control" size="16" type="text" value="" name="end_time"
+                                       id="input_end_time" readonly>
+                                <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
+                                <span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span>
+                            </div>
+                            <input type="hidden" value=""/><br/>
+                        </div>
+                    </div>
+                    <input type="hidden" name="node_id" value="{{ node_id }}">
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-default">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-primary" onclick="add_block_ip()">
+        Add Block IP
+    </button>
+
+    <button type="button" class="btn btn-warning" onclick="delete_block_ip()">
+        Delete Select
+    </button>
+
+    <button type="button" class="btn btn-danger" onclick="reload_haproxy()">
+        Reload Haproxy
+    </button>
+
+    <!-- Process Modal -->
+    <div class="modal fade bs-example-modal-lg" id="process_Modal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document" style="width: 90%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="process_modal_title"></h4>
+                </div>
+                <div class="modal-body">
+                    <pre><code id="process_content"></code></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!--/.container -->
+
+{% endblock %}
+
+{% block extend_css %}
+<link href="/static/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" media="screen">
+{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript" src="/static/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"
+        charset="UTF-8"></script>
+<script type="text/javascript" src="/static/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.fr.js"
+        charset="UTF-8"></script>
+<script type="text/javascript">
+$('.form_datetime').datetimepicker({
+    //language:  'fr',
+    weekStart: 1,
+    todayBtn:  1,
+    autoclose: 1,
+    todayHighlight: 1,
+    startView: 2,
+    forceParse: 0,
+    showMeridian: 1
+});
+
+function datetime_to_unix(datetime){
+    var tmp_datetime = datetime.replace(/:/g,'-');
+    tmp_datetime = tmp_datetime.replace(/ /g,'-');
+    var arr = tmp_datetime.split("-");
+    var now = new Date(Date.UTC(arr[0],arr[1]-1,arr[2],arr[3]-8,arr[4],arr[5]));
+    return parseInt(now.getTime()/1000);
+}
+
+function add_block_ip() {
+    $("#add_block_ip_Modal").modal('toggle');
+}
+
+function submit_block_ip() {
+    block_ip = $("#input_block_ip").val().trim();
+    if (block_ip.length == 0) {
+        alert("block ip is empty");
+        return false;
+    }
+
+    end_time = $("#input_end_time").val().trim();
+    if (end_time.length == 0) {
+        alert("end time is empty");
+        return false;
+    } else {
+        end_time_unix = datetime_to_unix(end_time)
+    }
+
+    if (end_time_unix <= Date.parse(new Date()) / 1000) {
+        alert("end time <= now()");
+        return false;
+    }
+
+    return true;
+}
+
+function reload_haproxy() {
+    if (confirm("This action will reload the haproxy on the server,are you sure?")) {
+        $.get('/haproxy/config_reload?node_id=' + {{ node_id }}, function(data, status) {
+            res = JSON.parse(data);
+            $("#process_Modal").modal('toggle');
+            content = ""
+            for (var i = 0; i < res["result"].length; i++) {
+                content += res["result"][i] + '\n';
+            }
+            if (res["status"] == "failed") {
+                content += "final result : " + res["status"];
+            }
+            $("#process_content").text(content);
+            $("#process_modal_title").text("Run Result");
+        });
+    }
+}
+
+function submit_delete_block_ip() {
+    var checkbox_select_ip = document.getElementsByName("checkbox_select_ip");
+    var checked_count = 0;
+    for (var i = 0; i < checkbox_select_ip.length; i++) {
+        if (checkbox_select_ip[i].checked == true) {
+            checked_count++;
+        }
+    }
+    if (checked_count == 0) {
+        alert("no machine ip checked");
+        return false;
+    }
+
+    return true;
+}
+
+function delete_block_ip() {
+    if (confirm("This action will delete the block ip,are you sure?")) {
+        $('#form_delete_block_ip').submit();
+    }
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container">
+    <form action="/haproxy/add" method="POST" class="form-horizontal" role="form" onsubmit="return onclick_submit()">
+        <fieldset>
+            <div id="legend" class="">
+                <legend class="">add haproxy</legend>
+            </div>
+
+            <!-- name -->
+            <div class="form-group">
+                <label for="name" class="col-sm-2 control-label">Haproxy Name</label>
+                <div class="col-sm-5">
+                    <input type="text" class="form-control" id="name" name="name" placeholder="haproxy node name, minimum length is 4">
+                </div>
+            </div>
+
+            <!-- checkbox ip -->
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Haproxy Machine</label>
+
+                <div class="col-sm-5 checkbox">
+                    {% for machine in all_machine %}
+                    <label class="checkbox"><input type="checkbox" value="{{ machine.ip }}" name="machine_ips" onchange="machine_change()"> {{ machine.ip }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- use ip -->
+            <div class="form-group">
+                <label for="name" class="col-sm-2 control-label">Virtual IP</label>
+                <div class="col-sm-5">
+                    <select class="form-control" id="select_virtual_ip" name="use_ip">
+                        <option>{% raw %}use {{ visit_ip }} in template{% endraw %}</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- comment -->
+            <div class="form-group">
+                <label for="name" class="col-sm-2 control-label">Comment</label>
+                <div class="col-sm-5">
+                    <textarea class="form-control" rows="3" placeholder="Can be empty" id="textarea_comment" name="comment"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</div>
+{% endblock %}
+
+{% block extend_js %}
+<script>
+function onclick_submit() {
+    var name = $("#name").val().trim();
+    if (name.length < 4) {
+        alert("name is illegal");
+        return false;
+    }
+
+    var use_ip = $("#use_ip").val().trim();
+    if (use_ip.length < 8) {
+        alert("Use IP is illegal");
+        return false;
+    }
+
+    var machine_ips_box = document.getElementsByName("machine_ips");
+    var checked_count = 0;
+    for (var i = 0; i < machine_ips_box.length; i++) {
+        if (machine_ips_box[i].checked == true) {
+            checked_count++;
+        }
+    }
+    if (checked_count == 0) {
+        alert("no machine ip checked");
+        return false;
+    }
+
+    return true;
+}
+
+function machine_change() {
+    var machine_ips_box = document.getElementsByName("machine_ips");
+    if (machine_ips_box.length > 0) {
+        $("#select_virtual_ip").empty();
+    }
+    for (var i = 0; i < machine_ips_box.length; i++) {
+        if (machine_ips_box[i].checked == true) {
+            add_machine_ip_list(machine_ips_box[i].value);
+        }
+    }
+}
+
+function add_machine_ip_list(machine_ip) {
+    $.get('/haproxy/get_machine_ip_list?machine_ip=' + machine_ip, function(data, status) {
+        res = JSON.parse(data);
+        for (var i = 0; i < res.length; i++) {
+            var option = document.createElement("option");
+            option.value = res[i];
+            option.text = res[i];
+            $("#select_virtual_ip")[0].options.add(option);
+        }
+    });
+}
+</script>
+{% endblock %}

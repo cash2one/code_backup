@@ -1,0 +1,208 @@
+{% extends 'receiver/base.html' %}
+
+{% block body %}
+<div class="container" >
+    <fieldset>
+        <div id="legend" class="">
+            <legend class="">edit receiver</legend>
+        </div>
+
+
+        <div class="row">
+            <div class="col-lg-2">
+            <label for="module_name" class="">Module Name</label>
+                </div>
+            <div class="col-lg-5">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                    <input type="text" readonly class="form-control"  id="module_name" name="module_name" value="{{ module_info['module'] }}" />
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="row">
+            <br>
+        </div>
+
+        <!-- phone list -->
+        <div class="row">
+            <div class="col-lg-2">
+                    <label class="col-lg-2 control-label">Phone</label>
+            </div>
+            <div class="col-lg-5">
+                <form id="deletePhoneForm" method="post" class="form-horizontal"
+                    data-bv-message="This value is not valid"
+                    data-bv-feedbackicons-valid="glyphicon glyphicon-ok"
+                    data-bv-feedbackicons-invalid="glyphicon glyphicon-remove"
+                    data-bv-feedbackicons-validating="glyphicon glyphicon-refresh"
+                    action="delete_phone">
+
+                    <div class="form-group">
+                        <select  class="form-control" name="phone_list">
+
+                        {% for phone in phone_list %}
+                        {% if phone %}
+                            <option>{{ phone }}</option>
+                        {% endif %}
+                        {% endfor %}
+                        </select>
+
+                        <div class="input-group-btn">
+                            <button type="button" class="btn btn-danger">删除选中的手机</button>
+                        </div>
+                        </div>
+                   </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-2">
+                    <label class="col-sm-10 control-label">添加手机</label>
+            </div>
+            <div class="col-lg-5">
+                <form id="addPhoneForm" method="post" class="form-horizontal"
+                    data-bv-message="This value is not valid"
+                    data-bv-feedbackicons-valid="glyphicon glyphicon-ok"
+                    data-bv-feedbackicons-invalid="glyphicon glyphicon-remove"
+                    data-bv-feedbackicons-validating="glyphicon glyphicon-refresh"
+                    action="add_phone">
+                    <div class="form-group">
+                        <input type="text" name="phone_name" class="form-control" placeholder="输入要添加的手机号">
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-primary">添加手机</button>
+                        </span>
+                    </div>
+                    </form>
+                </div>
+        </div>
+
+        <!-- email list -->
+        <div class="row">
+            <div class="col-lg-2">
+                    <label class="col-sm-10 control-label">Email</label>
+            </div>
+            <div class="col-sm-5">
+                <form name="deleteEmailForm" method="post" class="form-horizontal"
+                    data-bv-message="This value is not valid"
+                    data-bv-feedbackicons-valid="glyphicon glyphicon-ok"
+                    data-bv-feedbackicons-invalid="glyphicon glyphicon-remove"
+                    data-bv-feedbackicons-validating="glyphicon glyphicon-refresh"
+                    action="delete_email">
+
+                    <div class="form-group">
+                        <select  class="form-control" name="email_list">
+                        {% for email in email_list %}
+                        {% if email %}
+                            <option>{{ email }}</option>
+                        {% endif %}
+                        {% endfor %}
+                        </select>
+                        <div class="input-group-btn">
+                            <button type="submit" class="btn btn-danger">删除选中的邮箱</button>
+                        </div>
+                    </div>
+                    <input type="hidden" value="{{ module_info['module']}}" name="module_name">
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-2">
+                    <label class="col-sm-10 control-label">添加邮箱</label>
+            </div>
+            <div class="col-sm-5">
+                <form id="addEmailForm" method="post" class="form-horizontal"
+                    data-bv-message="This value is not valid"
+                    data-bv-feedbackicons-valid="glyphicon glyphicon-ok"
+                    data-bv-feedbackicons-invalid="glyphicon glyphicon-remove"
+                    data-bv-feedbackicons-validating="glyphicon glyphicon-refresh"
+                    action="add_email">
+                <div class="form-group">
+                    <input class="form-control" name="email_name" type="email" required
+                                data-bv-emailaddress="true"
+                                data-bv-emailaddress-message="The input is not a valid email address" />
+                    <span class="input-group-btn">
+                                <button type="submit" class="btn btn-primary" >添加邮箱</button>
+                    </span>
+                </div>
+                    <!-- module_name -->
+                <input type="hidden" value="{{ module_info['module']}}" name="module_name">
+                </form>
+            </div>
+        </div>
+    </fieldset>
+<!--</form>-->
+</div>
+{% endblock %}
+
+{% block extend_js %}
+<script>
+
+
+$(document).ready(function() {
+    $('#addEmailForm').bootstrapValidator();
+})
+
+function onclick_submit() {
+    var name = $("#name").val().trim();
+    if (name.length < 4) {
+        alert("name is illegal");
+        return false;
+    }
+
+    var use_ip = $("#use_ip").val().trim();
+    if (use_ip.length < 8) {
+        alert("Use IP is illegal");
+        return false;
+    }
+
+    var machine_ips_box = document.getElementsByName("machine_ips");
+    var checked_count = 0;
+    for (var i = 0; i < machine_ips_box.length; i++) {
+        if (machine_ips_box[i].checked == true) {
+            checked_count++;
+        }
+    }
+    if (checked_count == 0) {
+        alert("no machine ip checked");
+        return false;
+    }
+
+    return true;
+}
+
+function machine_change() {
+    var machine_ips_box = document.getElementsByName("machine_ips");
+    if (machine_ips_box.length > 0) {
+        $("#select_virtual_ip").empty();
+    }
+    for (var i = 0; i < machine_ips_box.length; i++) {
+        if (machine_ips_box[i].checked == true) {
+            add_machine_ip_list(machine_ips_box[i].value);
+        }
+    }
+}
+
+
+function add_machine_ip_list(machine_ip) {
+    $.get('/haproxy/get_machine_ip_list?machine_ip=' + machine_ip, function(data, status) {
+        res = JSON.parse(data);
+        for (var i = 0; i < res.length; i++) {
+            var option = document.createElement("option");
+            option.value = res[i];
+            option.text = res[i];
+            if (res[i].indexOf("{{ module_info.module_name }}") >= 0) {
+                option.selected = "selected";
+            }
+            $("#select_virtual_ip")[0].options.add(option);
+        }
+    });
+}
+
+$(document).ready(function() {
+    machine_change();
+});
+</script>
+{% endblock %}

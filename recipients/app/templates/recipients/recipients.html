@@ -1,0 +1,92 @@
+{% extends 'recipients/base.html' %}
+
+{% block navbar%}
+<!-- Fixed navbar -->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/recipients">Bee</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/recipients">Recipients Manager</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+{% endblock %}
+{% block body %}
+<div class="container">
+    <div class="row-fluid">
+        <div class="span12">
+            <table class="table table-hover table-striped">
+                <tbody>
+                {% if not receiver:%}
+                <tr>没有记录</tr>
+                {% else:%}
+                <thead>
+                <tr>
+                    <th>module</th>
+                    <th>phone</th>
+                    <th>email</th>
+                    <th>sms_max</th>
+
+                </tr>
+                </thead>
+                {% for node in receiver %}
+                <tr>
+
+                    <td>{{ node.module }}</td>
+                    <td>{{ node.phone }}</td>
+
+                    <td>{{ node.email}}</td>
+                    <td>{{ node.sms_max}}</td>
+
+                </tr>
+                {% endfor %}
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <button type="button" class="btn btn-primary" onclick="window.location.href='/add_module'">
+        Add Module
+    </button>
+
+
+    <!-- modal -->
+    <div class="modal fade bs-example-modal-lg" id="admin_page_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document" style="width: 20%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">All Admin Page</h4>
+                </div>
+                <div class="modal-body">
+                    <ul id="admin_page_list" class="list-unstyled"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!--/.container -->
+
+{% endblock %}
+
+{% block extend_js %}
+<script>
+
+</script>
+{% endblock %}

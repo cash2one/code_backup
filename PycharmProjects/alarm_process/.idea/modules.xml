@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/alarm_process.iml" filepath="$PROJECT_DIR$/.idea/alarm_process.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../opf/.idea/opf.iml" filepath="$PROJECT_DIR$/../opf/.idea/opf.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../recipients/.idea/receiver.iml" filepath="$PROJECT_DIR$/../recipients/.idea/receiver.iml" />
+    </modules>
+  </component>
+</project>

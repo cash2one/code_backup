@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container">
+    <div id="legend" class="">
+        <legend class="">{%if operate == "add"%} Add {%else%} Edit {%endif%}Config File : {{ node_name }} </legend>
+    </div>
+
+    <div class="form-group" id="select_tmpl_div" style="margin-bottom:50px;">
+        <label class="col-sm-4 control-label">Select One Haproxy Config As Template :</label>
+        <div class="col-sm-2">
+            <select class="input-xlarge" onchange="select_option(this.options[this.options.selectedIndex].value)" id="select_tmpl">
+                {% for config in all_config %}
+                <option>{{ config }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group" style="height: 100%;">
+        <pre><p id="tmpl_content" contenteditable="true" onfocus="onchange_tmpl_content()">{{ config_content }}</p></pre>
+    </div>
+
+    <div class="form-group" style="height: 100%;">
+        <button type="button" class="btn btn-primary" onclick="preview()">Preview</button>
+        <button type="button" class="btn btn-warning" onclick="onclick_deploy()">Deploy</button>
+        <button type="button" class="btn btn-danger" onclick="onclick_reload_haproxy()">Reload/Start Haproxy</button>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal fade bs-example-modal-lg" id="preview_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document" style="width: 90%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Preview : {{ node_name }}</h4>
+                </div>
+                <div class="modal-body">
+                    <pre id="preview_content"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Process Modal -->
+    <div class="modal fade bs-example-modal-lg" id="process_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document" style="width: 90%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="process_modal_title">Message</h4>
+                </div>
+                <div class="modal-body">
+                    <pre><code id="process_content"></code></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extend_js %}
+<script>
+function onchange_tmpl_content() {
+    $("#preview_content").text("");
+}
+
+function select_option(tmpl_name) {
+    $.get('/haproxy/get_config?tmpl_name=' + tmpl_name, function(data, status) {
+        $("#tmpl_content").text(data);
+    });
+}
+
+function preview() {
+    tmpl_data = $('#tmpl_content').html();
+    if (tmpl_data.trim().length == 0) {
+        return;
+    }
+    tmpl_data = tmpl_data.replace(/<br>/g, "\n");
+    $.post('/haproxy/generate_preview_config', {node_id: "{{ node_id }}", tmpl: tmpl_data}, function(data) {
+        var res = JSON.parse(data);
+        if (res.status == "success") {
+            $("#preview_Modal").modal('toggle');
+            $("#preview_content").text(res.result);
+            // 匹配字符实体
+            match_special = res.result.match('&[a-z|A-Z]{2,6};');
+            if (match_special) {
+                alert("invalid character" + match_special);
+            }
+            match_html_tag = res.result.match('<\w{1,30}>');
+            if (match_html_tag) {
+                alert("invalid character" + match_html_tag);
+            }
+        } else {
+            alert("failed reason : " + res.result);
+        }
+    });
+}
+
+function onclick_deploy() {
+    preview_data = $("#preview_content").text();
+    if (preview_data.trim().length == 0) {
+        alert("First of all make sure has been preview this configuration file");
+        return;
+    }
+    tmpl_data = $('#tmpl_content').html();
+    tmpl_data = tmpl_data.replace(/<br>/g, "\n");
+    if (confirm("This action will replace the configuration files on the server,are you sure?")) {
+        $.post('/haproxy/config_deploy',
+            {node_id: "{{ node_id }}", tmpl_data: tmpl_data, tmpl_preview: preview_data},
+            function(data) {
+                res = JSON.parse(data);
+                $("#process_Modal").modal('toggle');
+                content = ""
+                for (var i = 0; i < res["result"].length; i++) {
+                    content += res["result"][i] + '\n';
+                }
+                content += "final result : " + res["status"];
+                $("#process_content").text(content);
+                if (res["status"] == "success") {
+                    $("#process_modal_title").text("Result : success");
+                } else {
+                    $("#process_modal_title").text("Result : failed");
+                }
+            }
+        );
+    }
+}
+
+function onclick_reload_haproxy() {
+    if (confirm("This action will start or reload the configuration files on the server,are you sure?")) {
+        $.get('/haproxy/config_reload?node_id=' + {{ node_id }}, function(data, status) {
+            res = JSON.parse(data);
+            $("#process_Modal").modal('toggle');
+            content = ""
+            for (var i = 0; i < res["result"].length; i++) {
+                content += res["result"][i] + '\n';
+            }
+            if (res["status"] == "failed") {
+                content += "final result : " + res["status"];
+            }
+            $("#process_content").text(content);
+            $("#process_modal_title").text("Run Result");
+        });
+    }
+}
+
+$(document).ready(function() {
+    operate = "{{ operate }}";
+    config_content_len = "{{ config_content_len }}";
+    if (operate == "edit") {
+        if (config_content_len > 0) {
+            $("#select_tmpl_div")[0].style.display = "none";
+        } else {
+            if ($("#select_tmpl")[0].options.length == 0) {
+                $("#tmpl_content").text("input config content");
+                $("#select_tmpl_div")[0].style.display = "none";
+            } else {
+                alert("this node not having the config file, please select one exists config file");
+                select_option($("#select_tmpl")[0][$("#select_tmpl")[0].selectedIndex].value);
+            }
+        }
+    } else {
+        // add one config
+        if ($("#select_tmpl")[0].options.length == 0) {
+            $("#tmpl_content").text("input config content");
+            $("#select_tmpl_div")[0].style.display = "none";
+        } else {
+            select_option($("#select_tmpl")[0][$("#select_tmpl")[0].selectedIndex].value);
+        }
+    }
+});
+</script>
+{% endblock %}

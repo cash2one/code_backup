@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QUnit Test Suite</title>
+
+
+    <!-- Your project file goes here -->
+    <link rel="stylesheet" href="../css/jquery.contextMenu.css" type="text/css" media="screen">
+    <link rel="stylesheet" href="../css/bootstrap.min.css" type="text/css" media="screen">
+
+    <script src="../dist/jquery.min.js"></script>
+    <script src="../dist/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../src/jquery.ui.position.js"></script>
+    <script type="text/javascript" src="../src/jquery.contextMenu.js"></script>
+</head>
+<body>
+<script>
+  $(function(){
+      $('#myTab a:last').tab('show');
+//    $('#the-node').contextMenu({
+//        selector: 'li',
+//        trigger: 'hover',
+//        autoHide:true,
+//        callback: function(key, options) {
+////            window.location.href="http://www.baidu.com"+$(this).text();
+//             console.log($(this).attr("class"));
+//        },
+//        items: {
+//            "copy": {name: "Copy", icon: "copy"}
+//        }
+//    });
+
+});
+</script>
+<div class="tabbable">
+  <ul class="nav nav-tabs" id="myTab">
+    <li class="active"><a href="#tab1" data-toggle="tab">tab1</a></li>
+    <li><a href="#tab2" data-toggle="tab">tab2</a></li>
+  </ul>
+  <div class="tab-content" id="namespace" style="height: 950px;overflow-y: scroll;">
+    <div class="tab-pane active" id="tab1">
+        <ul class="nav nav-tabs" id="namespace_usual" data-toggle="context" data-target="#context-menu">
+            <li style="float:none;word-break: break-all;"><a href="#"><small>path1</small></a></li>
+            <li style="float:none;word-break: break-all;"><a href="#"><small>path2</small></a></li>
+            <li style="float:none;word-break: break-all;"><a href="#"><small>path3</small></a></li>
+            <li style="float:none;word-break: break-all;"><a href="#"><small>path4</small></a></li>
+        </ul>
+    </div>
+    <div class="tab-pane" id="tab2">
+        <ul class="nav nav-tabs" id="namespace_all" data-toggle="context" data-target="#context-menu">
+           <li style="float:none;word-break: break-all;"><a href="#"><small>path5</small></a></li>
+            <li style="float:none;word-break: break-all;"><a href="#"><small>path6</small></a></li>
+        </ul>
+    </div>
+  </div>
+</div>
+</body>
+</html>
